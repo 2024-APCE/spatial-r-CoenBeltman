@@ -376,9 +376,80 @@ map_nitrogen_sa <- ggplot() +
   ggspatial::annotation_scale(location="bl", width_hint=0.2)
 map_nitrogen_sa
 
+
+
+SandContent <- terra::rast("./MyData/SandContent_5_15cm.tif")
+map_sandcontent_sa <- ggplot() +
+  tidyterra::geom_spatraster(data=SandContent) +
+  scale_fill_gradientn(colours=rev(viridis::viridis(256)),
+                       limits=c(366, 636),
+                       oob=squish,
+                       name="g/kg") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5) +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="skyblue") +
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="blue") +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, linewidth=0.5, colour="red") +
+  labs(title="Sand particle proportion") +
+  coord_sf(xlimits,ylimits,datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl", width_hint=0.2)
+map_sandcontent_sa
+
+
+TotalCarbon <- terra::rast("./MyData/TotalCarbon.tif")
+map_totalcarbon_sa <- ggplot() +
+  tidyterra::geom_spatraster(data=TotalCarbon) +
+  scale_fill_gradientn(colours=rev(viridis::viridis(256)),
+                       limits=c(24, 35),
+                       oob=squish,
+                       name="g/kg") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5) +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="skyblue") +
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="blue") +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, linewidth=0.5, colour="red") +
+  labs(title="Carbon total at 0-20cm") +
+  coord_sf(xlimits,ylimits,datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl", width_hint=0.2)
+map_totalcarbon_sa
+
+
+
+pH <- terra::rast("./MyData/ph_5_15cm.tif")
+map_ph_sa <- ggplot() +
+  tidyterra::geom_spatraster(data=pH) +
+  scale_fill_gradientn(colours=rev(viridis::viridis(256)),
+                       limits=c(61, 106),
+                       oob=squish,
+                       name="pHx10") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5) +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="skyblue") +
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="blue") +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, linewidth=0.5, colour="red") +
+  labs(title="Soil pH at 5-15 cm") +
+  coord_sf(xlimits,ylimits,datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl", width_hint=0.2)
+map_ph_sa
 #combine maps study area
 all_maps_sa<-woody_map_sa +map_dist2river_sa + map_elevation_study + map_rainfall_sa + map_burnfreq_sa + map_fertility_sa + 
-  landform_map_sa + CoreProtectedAreas_map_sa + map_nitrogen_sa
+  landform_map_sa + CoreProtectedAreas_map_sa + map_nitrogen_sa + map_sandcontent_sa +
+  map_totalcarbon_sa + map_ph_sa
   patchwork::plot_layout(ncol=2)
 all_maps_sa
 
@@ -417,8 +488,9 @@ rpoints_map_sa
 
 ### put all maps together
 all_maps_sa<-woody_map_sa +map_dist2river_sa + map_elevation_study + map_rainfall_sa + map_burnfreq_sa + map_fertility_sa + 
-  landform_map_sa  + CoreProtectedAreas_map_sa + rpoints_map_sa + map_nitrogen_sa
-patchwork::plot_layout(ncol=3)
+  landform_map_sa  + CoreProtectedAreas_map_sa + rpoints_map_sa + map_nitrogen_sa + map_sandcontent_sa +
+  map_totalcarbon_sa + map_ph_sa
+patchwork::plot_layout(ncol=4)
 all_maps_sa
 ggsave("./figures/all_maps_sa.png", width = 18, height = 18, units = "cm",dpi=300)
 
@@ -458,12 +530,25 @@ nitrogen_points <- terra::extract(Nitrogen, rpoints) |>
   as_tibble() |>
   dplyr::rename(nitrogen = mean_0_20)
 nitrogen_points
+sand_points <- terra::extract(SandContent, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(sandcontent = `sand_5-15cm_mean`)
+sand_points
+carbon_points <- terra::extract(TotalCarbon, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(carbon = mean_0_20)
+  carbon_points
+ph_points <- terra::extract(pH, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(pH = `phh2o_5-15cm_mean`)
+  ph_points
 
 # merge the different variable into a single table
 # use woody biomass as the last variable
 pointdata<-cbind(dist2river_points[,2],elevation_points[,2], 
                  CorProtAr_points[,2], rainfall_points[,2], 
-                 cec_points[,2],burnfreq_points[,2], nitrogen_points [,2],
+                 cec_points[,2],burnfreq_points[,2], nitrogen_points [,2], 
+                 sand_points [,2], carbon_points [,2], ph_points [,2],
                  landform_points[,2],woody_points[,2]) |>
   as_tibble()
 pointdata
