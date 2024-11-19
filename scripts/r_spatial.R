@@ -611,7 +611,7 @@ ylabel <- paste("PC2 (", round(pca_result$CA$eig[2] / sum(pca_result$CA$eig) * 1
 title(xlab=xlabel)
 title(ylab=ylabel)
 # add contours for woody cover
-vegan::ordisurf(pca_result, pointdata$woody, add = TRUE, col = "green4")
+vegan::ordisurf(pca_result, pointdata$woody, add = TRUE, col = "green4") 
 
 
 
